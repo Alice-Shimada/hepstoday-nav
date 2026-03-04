@@ -4,454 +4,586 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark light" />
-  <meta name="theme-color" content="#0b1020" />
-  <title>heps.today · High Energy Physics, Today</title>
-  <meta name="description" content="heps.today — bilingual gateway to the High Energy Physics daily digest." />
-
+  <title>heps.today · Navigator</title>
+  <meta name="description" content="heps.today, discover the frontier of High Energy Physics" />
   <style>
+
+    a:link { color: inherit; } /* 未访问的链接 */
+    a:visited { color: inherit; } /* 已访问的链接 */
+    a:hover { color: #aceeffae; } /* 鼠标悬停时的链接 */
+    a:active { color: inherit; } /* 激活状态的链接 */
+
+
     :root{
-      --bg0:#070a12;
-      --bg1:#0b1020;
-      --fg:#e8edf5;
-      --muted:rgba(232,237,245,.72);
-      --glass:rgba(255,255,255,.06);
-      --border:rgba(255,255,255,.12);
-      --shadow: 0 18px 50px rgba(0,0,0,.45);
-      --accent:#7dd3fc;   /* cyan */
-      --accent2:#a78bfa;  /* violet */
-      --ok:#86efac;       /* green */
-      --warn:#fbbf24;     /* amber */
-      --radius:18px;
-      --maxw: 980px;
-      --focus: 0 0 0 3px rgba(125,211,252,.25);
+      --bg: #070a12;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --muted2: rgba(255,255,255,.55);
+      --line: rgba(255,255,255,.12);
+      --glass: rgba(14, 18, 28, .44);
+      --glass2: rgba(14, 18, 28, .28);
+      --glowA: #7dd3fc; /* cyan */
+      --glowB: #a78bfa; /* violet */
+      --glowC: #34d399; /* green */
+      --shadow: 0 16px 50px rgba(0,0,0,.55);
+      --radius: 20px;
+      --max: 980px;
     }
 
-    @media (prefers-color-scheme: light){
-      :root{
-        --bg0:#f7f8fc;
-        --bg1:#ffffff;
-        --fg:#0b1020;
-        --muted:rgba(11,16,32,.68);
-        --glass:rgba(11,16,32,.05);
-        --border:rgba(11,16,32,.12);
-        --shadow: 0 18px 50px rgba(11,16,32,.15);
-        --focus: 0 0 0 3px rgba(11,16,32,.14);
-      }
-    }
-
-    *{ box-sizing:border-box; }
+    *{ box-sizing: border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
-      color:var(--fg);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background:
-        radial-gradient(1100px 700px at 15% 10%, rgba(167,139,250,.20), transparent 55%),
-        radial-gradient(900px 600px at 90% 30%, rgba(125,211,252,.18), transparent 55%),
-        radial-gradient(1200px 900px at 50% 110%, rgba(125,211,252,.12), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      overflow-x:hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
     }
 
-    /* Subtle detector-grid */
-    body::before{
+    /* --- Layer 0: background image --- */
+    .bg{
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--bg) url("figure/background.jpg") center/cover no-repeat fixed;
+      transform: scale(1.03); /* avoid blur edge in fallback */
+    }
+    /* subtle vignette for readability */
+    .bg::after{
       content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      opacity:.22;
-      background-image:
-        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
-      background-size: 40px 40px;
-      mask-image: radial-gradient(circle at 50% 20%, rgba(0,0,0,1), rgba(0,0,0,0) 62%);
-    }
-    @media (prefers-color-scheme: light){
-      body::before{
-        opacity:.18;
-        background-image:
-          linear-gradient(to right, rgba(11,16,32,.08) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(11,16,32,.08) 1px, transparent 1px);
-      }
-    }
-
-    .skip{
       position:absolute;
-      left:-999px;
-      top:auto;
-      width:1px;height:1px;
-      overflow:hidden;
-    }
-    .skip:focus{
-      left:16px; top:16px;
-      width:auto; height:auto;
-      padding:10px 12px;
-      border-radius:12px;
-      background:var(--bg1);
-      border:1px solid var(--border);
-      box-shadow:var(--shadow);
-      z-index:9999;
+      inset:0;
+      background:
+        radial-gradient(1200px 700px at 50% 25%, rgba(0,0,0,.15), rgba(0,0,0,.65) 65%, rgba(0,0,0,.80)),
+        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55));
     }
 
+    /* --- Layer 1: frosted overlay (must be above background) --- */
+    .frost{
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: rgba(8, 10, 18, .32);
+      /* main frosted effect (supported browsers) */
+      backdrop-filter: blur(0px) saturate(120%) brightness(0.95);
+      -webkit-backdrop-filter: blur(0px) saturate(120%) brightness(0.95);
+    }
+
+    /* Fallback when backdrop-filter unsupported: blur the background itself */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .bg{ filter: blur(0px) saturate(1.15) brightness(0.95); }
+      .frost{ background: rgba(8, 10, 18, .55); }
+    }
+
+    /* --- Layer 2: particle/track canvas (must be above frosted layer) --- */
+    canvas#tracks{
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: .55;
+      mix-blend-mode: screen;
+    }
+
+    /* --- Layer 3: content --- */
     .wrap{
-      max-width:var(--maxw);
-      margin:0 auto;
-      padding: clamp(22px, 4vw, 44px);
-      min-height:100%;
-      display:flex;
-      flex-direction:column;
-      gap: 26px;
-      justify-content:center;
+      position: relative;
+      z-index: 3;
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 3.5vw, 44px);
     }
 
-    header.hero{
+    .panel{
+      width: min(var(--max), 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-inner{
+      padding: clamp(18px, 3vw, 34px);
+      background:
+        radial-gradient(900px 380px at 15% 0%, rgba(125,211,252,.14), transparent 55%),
+        radial-gradient(760px 360px at 85% 10%, rgba(167,139,250,.12), transparent 55%),
+        radial-gradient(700px 420px at 60% 100%, rgba(52,211,153,.10), transparent 50%);
+    }
+
+    header{
       display:flex;
-      flex-direction:column;
-      gap: 10px;
       align-items:flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
     }
 
     .brand{
       display:flex;
-      align-items:center;
-      gap: 14px;
-      flex-wrap:wrap;
-    }
-
-    .mark{
-      width:54px;
-      height:54px;
-      border-radius:50%;
-      position:relative;
-      box-shadow: 0 0 0 1px var(--border), var(--shadow);
-      background:
-        radial-gradient(circle at 50% 50%, rgba(125,211,252,.18), transparent 52%),
-        conic-gradient(from 180deg, rgba(125,211,252,.0), rgba(125,211,252,.65), rgba(167,139,250,.55), rgba(125,211,252,.0));
-      overflow:hidden;
-      flex:0 0 auto;
-    }
-    .mark::before{
-      /* collider ring */
-      content:"";
-      position:absolute;
-      inset:10px;
-      border-radius:50%;
-      border:2px solid rgba(255,255,255,.22);
-      box-shadow: inset 0 0 16px rgba(125,211,252,.18);
-    }
-    .mark::after{
-      /* “tracks” crossing */
-      content:"";
-      position:absolute;
-      inset:-12px;
-      background:
-        linear-gradient(115deg, transparent 46%, rgba(125,211,252,.75) 49%, transparent 52%),
-        linear-gradient(245deg, transparent 46%, rgba(167,139,250,.65) 49%, transparent 52%);
-      opacity:.65;
-      filter: blur(.2px);
-      transform: rotate(-10deg);
-    }
-    @media (prefers-reduced-motion: no-preference){
-      .mark{ animation: spin 10s linear infinite; }
-      @keyframes spin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+      flex-direction: column;
+      gap: 10px;
+      min-width: min(560px, 100%);
     }
 
     .title{
-      font-size: clamp(38px, 5.2vw, 64px);
-      line-height:1.05;
-      letter-spacing: -0.02em;
       margin:0;
-      font-weight: 780;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-weight: 820;
+      font-size: clamp(44px, 6.5vw, 82px);
       display:flex;
-      align-items:baseline;
-      gap:.02em;
-      text-shadow: 0 0 18px rgba(125,211,252,.10);
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
     }
+
     .title .hep{
-      color: var(--accent);
-      text-shadow:
-        0 0 20px rgba(125,211,252,.25),
-        0 0 44px rgba(125,211,252,.15);
+      background: linear-gradient(90deg, var(--glowA), var(--glowB));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 28px rgba(125,211,252,.18);
     }
-    .title .dot{ opacity:.9; }
-    .title .today{ opacity:.95; }
+    .title .s{
+      font-size: .64em;
+      vertical-align: super;
+      margin-left: -6px;
+      color: rgba(255,255,255,.85);
+      text-shadow: 0 0 22px rgba(167,139,250,.18);
+    }
+    .title .dot{
+      color: rgba(255,255,255,.65);
+      transform: translateY(-2px);
+    }
+    .title .today{
+      color: rgba(255,255,255,.92);
+    }
+
+    .hep-badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 14px;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .hep-badge .ring{
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.18);
+      background:
+        conic-gradient(from 180deg, rgba(125,211,252,.95), rgba(167,139,250,.85), rgba(52,211,153,.85), rgba(125,211,252,.95));
+      box-shadow: 0 0 22px rgba(125,211,252,.18);
+    }
+    .hep-badge code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: rgba(255,255,255,.82);
+      background: rgba(0,0,0,.22);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.10);
+    }
 
     .subtitle{
-      margin:0;
-      max-width: 72ch;
+      margin: 0;
       color: var(--muted);
-      font-size: 16px;
-      line-height: 1.6;
-    }
-    .subtitle .sep{ opacity:.55; padding:0 .45em; }
-
-    .cards{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-    @media (max-width: 720px){
-      .cards{ grid-template-columns: 1fr; }
+      max-width: 62ch;
+      font-size: clamp(14px, 1.6vw, 18px);
+      line-height: 1.55;
     }
 
-    a.card{
-      position:relative;
-      text-decoration:none;
-      color:inherit;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-      padding: 18px 18px 16px;
+  .quote p{
+    margin: 0;
+    font-style: italic;
+    font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+    font-size: clamp(16px, 1.7vw, 20px);
+    line-height: 1.55;
+    color: rgba(255,255,255,.86);
+  }
+
+  .quote footer{
+    margin-top: 10px;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-style: italic;
+    font-size: 13px;
+    color: rgba(255,255,255,.58);
+  }
+
+    .guides{
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 5fr 1fr;
+      gap: 14px;
+    }
+    .guide{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.035);
+      padding: 14px 44px 12px;
+    }
+    .guide h2{
+      margin: 0 0 8px;
+      font-size: 14px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.78);
       display:flex;
-      flex-direction:column;
+      align-items:center;
       gap: 10px;
-      overflow:hidden;
-      transition: transform .16s ease, border-color .16s ease, background .16s ease;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      outline:none;
     }
-    a.card:hover{ transform: translateY(-2px); border-color: rgba(125,211,252,.35); }
-    a.card:focus-visible{ box-shadow: var(--shadow), var(--focus); border-color: rgba(125,211,252,.55); }
+    .guide h2 .lang-pill{
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--muted2);
+      background: rgba(0,0,0,.16);
+    }
+    .guide p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14.5px;
+    }
 
-    a.card::before{
-      /* “event display” spark */
+    nav{
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .card{
+      position: relative;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      padding: 18px 18px 16px;
+      text-decoration: none;
+      color: var(--text);
+      overflow: hidden;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+
+    .card::before{
       content:"";
       position:absolute;
-      inset:-1px;
+      inset:-2px;
       background:
-        radial-gradient(520px 240px at 0% 0%, rgba(125,211,252,.18), transparent 55%),
-        radial-gradient(420px 220px at 100% 0%, rgba(167,139,250,.14), transparent 60%),
-        radial-gradient(260px 260px at 40% 110%, rgba(134,239,172,.10), transparent 60%);
-      opacity:.9;
+        radial-gradient(500px 220px at 25% 0%, rgba(125,211,252,.18), transparent 60%),
+        radial-gradient(520px 240px at 75% 0%, rgba(167,139,250,.16), transparent 62%),
+        radial-gradient(520px 240px at 50% 120%, rgba(52,211,153,.12), transparent 60%);
+      opacity: .9;
       pointer-events:none;
     }
 
-    .card h2{
-      margin:0;
+    .card .top{
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .card .label{
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card .kicker{
+      font-size: 12px;
+      color: var(--muted2);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .card .name{
       font-size: 20px;
-      line-height:1.2;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      z-index:1;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.88);
-      font-size: 12px;
-      letter-spacing:.01em;
-      z-index:1;
-    }
-    @media (prefers-color-scheme: light){
-      .badge{
-        background: rgba(255,255,255,.55);
-        color: rgba(11,16,32,.86);
-        border-color: rgba(11,16,32,.18);
-      }
+      font-weight: 760;
+      letter-spacing: -0.01em;
     }
 
-    .card p{
-      margin:0;
+    .card .desc{
+      position: relative;
+      margin: 0;
       color: var(--muted);
-      font-size: 14.5px;
-      line-height: 1.65;
-      z-index:1;
-      max-width: 60ch;
+      line-height: 1.55;
+      font-size: 14px;
+      max-width: 56ch;
     }
 
-    .cta{
-      margin-top:auto;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 14px;
-      z-index:1;
-      padding-top: 6px;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(0,0,0,.22);
-      font-weight: 650;
-      letter-spacing:.01em;
-      white-space:nowrap;
-    }
-    @media (prefers-color-scheme: light){
-      .btn{
-        background: rgba(255,255,255,.70);
-        border-color: rgba(11,16,32,.14);
-      }
-    }
-
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      font-size: 12px;
-      padding: 2px 7px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,.18);
+    .arrow{
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.18);
-      opacity:.92;
+      display:grid;
+      place-items:center;
+      flex: 0 0 auto;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
     }
-    @media (prefers-color-scheme: light){
-      .kbd{
-        border-color: rgba(11,16,32,.18);
-        background: rgba(255,255,255,.55);
-      }
-    }
-
-    .recommended{
-      border-color: rgba(134,239,172,.55) !important;
-    }
-    .recommended .btn{
-      border-color: rgba(134,239,172,.35);
+    .arrow svg{
+      width: 18px;
+      height: 18px;
+      opacity: .9;
     }
 
-    .note{
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--glass);
-      padding: 14px 16px;
-      color: var(--muted);
-      line-height:1.7;
-      font-size: 13.5px;
-      box-shadow: 0 10px 32px rgba(0,0,0,.18);
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.26);
+      box-shadow: 0 18px 52px rgba(0,0,0,.40);
     }
-    .note strong{ color: var(--fg); font-weight: 720; }
+    .card:active{ transform: translateY(0px); }
+    .card:focus-visible{
+      outline: 3px solid rgba(125,211,252,.40);
+      outline-offset: 3px;
+    }
 
     footer{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap: 14px;
-      flex-wrap:wrap;
-      color: var(--muted);
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed rgba(255,255,255,.14);
+      color: rgba(255,255,255,.55);
       font-size: 12.5px;
-      padding-top: 6px;
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    @media print{
-      body{ background:#fff; color:#000; }
-      body::before{ display:none; }
-      .mark{ display:none; }
-      a.card{ box-shadow:none; }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (max-width: 860px){
+      header{ flex-direction: column; align-items: flex-start; }
+      .guides{ grid-template-columns: 1fr; }
+      nav{ grid-template-columns: 1fr; }
+      .hep-badge{ width: fit-content; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .card{ transition: none; }
+      canvas#tracks{ display: none; }
     }
   </style>
 </head>
 
 <body>
-  <a class="skip" href="#main">跳到内容 / Skip to content</a>
+  <!-- Layer 0 -->
+  <div class="bg" aria-hidden="true"></div>
+  <!-- Layer 1 (frosted layer) -->
+  <div class="frost" aria-hidden="true"></div>
+  <!-- Layer 2 (effects ABOVE frost) -->
+  <canvas id="tracks" aria-hidden="true"></canvas>
 
-  <main id="main" class="wrap">
-    <header class="hero">
-      <div class="brand" aria-label="heps.today">
-        <div class="mark" aria-hidden="true"></div>
-        <h1 class="title">
-          <span class="hep">HEP</span><span>s</span><span class="dot">.</span><span class="today">today</span>
-        </h1>
+  <!-- Layer 3 (content ABOVE frost) -->
+  <div class="wrap">
+    <main class="panel" role="main">
+      <div class="panel-inner">
+        <header>
+          <div class="brand">
+            <h1 class="title" aria-label="heps.today">
+              <span class="hep">HEP</span><span class="s">s</span><span class="dot">.</span><span class="today">Today</span>
+            </h1>
+            <p class="subtitle">
+              High Energy Physics · Daily arXiv AI Enhanced<br>
+            </p>
+          </div>
+<!-- 
+          <div class="hep-badge" title="High Energy Physics (HEP)">
+            <span class="ring" aria-hidden="true"></span>
+            <span><strong>HEP</strong> • <code>√s</code> • collisions</span>
+          </div>
+        </header> -->
+        <blockquote class="quote" lang="en">
+          <p>"The more the universe seems comprehensible, the more it also seems pointless."</p>
+          <footer>— Steven Weinberg</footer>
+        </blockquote>
+
+        <section class="guides" aria-label="Bilingual guidance">
+          <div class="guide">
+            <h2>欢迎<span class="lang-pill">Welcome</span></h2>
+            <p>
+              欢迎来到 <span class="mono">heps.today</span> 导航页。只需轻点鼠标，您就能获得全世界高能物理和相关研究的最新进展。<br/>
+
+              Welcome to <span class="mono">heps.today</span>. Just one click reaches you to the global advances in high-energy physics and related researches.
+            </p>
+          </div>
+          <!-- <div class="guide">
+            <h2>Guide <span class="lang-pill">English</span></h2>
+            <p>
+              This is the <span class="mono">heps.today</span> navigation page. Pick a language to open the Daily arXiv
+              High-Energy Physics AI‑enhanced digest. Use <span class="mono">Tab</span> to focus and <span class="mono">Enter</span> to open.
+            </p>
+          </div> -->
+        </section>
+
+        <nav aria-label="Language links">
+          <a class="card" href="https://en.heps.today" lang="en" rel="noopener">
+            <div class="top">
+              <div class="label">
+                <div class="kicker">English Site</div>
+                <div class="name">en.heps.today</div>
+              </div>
+              <div class="arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 17L17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M10 7H17V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <p class="desc">Daily arXiv AI Enhanced · HEP digest in English.</p>
+          </a>
+
+          <a class="card" href="https://cn.heps.today" lang="zh-Hans" rel="noopener">
+            <div class="top">
+              <div class="label">
+                <div class="kicker">中文站</div>
+                <div class="name">cn.heps.today</div>
+              </div>
+              <div class="arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 17L17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M10 7H17V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <p class="desc">每日 arXiv AI 增强 · 中文阅读高能物理摘要。</p>
+          </a>
+        </nav>
+
+        <footer>
+          <p>
+          <span class="mono">heps.today </span>© <span class="mono">2026 </span>
+          <span class="mono" aria-label="physics note">Powered by <a href="liuyuanche@mail.ustc.edu.cn">Yuanche Liu</a>(<a href="https://github.com/Alice-Shimada">Alice-Shimada@GitHub)</a></span> <br>
+          <span class="mono" aria-label="physics note">Background generated from <a href="https://github.com/baopinshui/NPGS">NPGS</a> </span>
+          </p>
+        </footer>
       </div>
-
-      <p class="subtitle">
-        <span>用<strong>AI</strong>获取 <strong>高能物理（HEP, High Energy Physics）</strong> 每天的最新成就！</span>
-        <br>
-        <span>Reach out the FRONTIER of <strong>High Energy Physics</strong>, with <strong>AI Enhancement</strong>! </span>
-      </p>
-    </header>
-
-    <section class="cards" aria-label="Language selection / 语言选择">
-      <a class="card" id="card-en" href="https://en.heps.today/" rel="noopener" aria-label="Go to the English site">
-        <h2>
-          English
-          <span class="badge" id="badge-en" hidden>Recommended</span>
-        </h2>
-        <p>
-          Follow the latest global advances in high-energy physics. (Shortcut: <span class="kbd">E</span>)
-        </p>
-
-        <div class="cta">
-          <span class="btn">Enter EN →</span>
-          <span class="kbd">en</span>
-        </div>
-      </a>
-
-      <a class="card" id="card-cn" href="https://cn.heps.today/" rel="noopener" aria-label="进入中文站">
-        <h2>
-          中文
-          <span class="badge" id="badge-cn" hidden>推荐</span>
-        </h2>
-        <p>
-          用中文浏览高能物理在世界上的最新进展（快捷键：<span class="kbd">C</span>）
-        </p>
-
-        <div class="cta">
-          <span class="btn">进入 CN →</span>
-          <span class="kbd">cn</span>
-        </div>
-      </a>
-    </section>
-
-    <section class="note" aria-label="Tips / 提示">
-      <div>
-        <strong>提示 / Tip：</strong>
-        进入站点后，可以点击右上角的齿轮按钮，不再错过你最感兴趣的主题和关注的作者！<br>
-        Click the gear icon in the top-right corner to customize topics and authors you follow.
-      </div>
-      <noscript>
-        <div style="margin-top:10px;">
-          <strong>Note:</strong> JavaScript is disabled. The page still works—please click a language card to continue.
-        </div>
-      </noscript>
-    </section>
-
-    <footer>
-      <div>© <span id="year"></span> heps.today</div>
-      <div>
-        Keyboard: <span class="kbd">E</span> English · <span class="kbd">C</span> 中文
-      </div>
-    </footer>
-  </main>
+    </main>
+  </div>
 
   <script>
+    // Particle/track effect (above frosted layer). Auto-disables on reduced motion.
     (function () {
-      var year = document.getElementById('year');
-      if (year) year.textContent = String(new Date().getFullYear());
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) return;
 
-      // Recommend a language based on browser preference, but never auto-redirect.
-      var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      var preferZh = lang.indexOf('zh') === 0;
+      const canvas = document.getElementById('tracks');
+      const ctx = canvas.getContext('2d');
 
-      var cardEn = document.getElementById('card-en');
-      var cardCn = document.getElementById('card-cn');
-      var badgeEn = document.getElementById('badge-en');
-      var badgeCn = document.getElementById('badge-cn');
+      let w, h, dpr;
+      function resize() {
+        dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        w = canvas.width  = Math.floor(window.innerWidth * dpr);
+        h = canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        ctx.setTransform(1,0,0,1,0,0);
+      }
+      window.addEventListener('resize', resize, { passive: true });
+      resize();
 
-      if (preferZh) {
-        cardCn && cardCn.classList.add('recommended');
-        if (badgeCn) badgeCn.hidden = false;
-      } else {
-        cardEn && cardEn.classList.add('recommended');
-        if (badgeEn) badgeEn.hidden = false;
+      // Points that gently drift; occasional "collision" streaks.
+      const N = Math.round(Math.min(110, Math.max(55, (window.innerWidth * window.innerHeight) / 18000)));
+      const pts = [];
+      for (let i = 0; i < N; i++) {
+        pts.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.22 * dpr,
+          vy: (Math.random() - 0.5) * 0.22 * dpr,
+          r: (Math.random() * 1.6 + 0.6) * dpr
+        });
       }
 
-      // Keyboard shortcuts: E / C
-      window.addEventListener('keydown', function (e) {
-        if (!e || !e.key) return;
-        var k = e.key.toLowerCase();
-        if (k === 'e' && cardEn) cardEn.click();
-        if (k === 'c' && cardCn) cardCn.click();
-      });
+      let t = 0;
+      function draw() {
+        t += 1;
+        ctx.clearRect(0, 0, w, h);
+
+        // soft gradient wash (subtle "detector glow")
+        const g = ctx.createRadialGradient(w*0.55, h*0.25, 0, w*0.55, h*0.25, Math.max(w,h)*0.85);
+        g.addColorStop(0, 'rgba(125, 211, 252, 0.06)');
+        g.addColorStop(0.55, 'rgba(167, 139, 250, 0.045)');
+        g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        // update points
+        for (const p of pts) {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -50) p.x = w + 50;
+          if (p.x > w + 50) p.x = -50;
+          if (p.y < -50) p.y = h + 50;
+          if (p.y > h + 50) p.y = -50;
+        }
+
+        // connections (tracks)
+        ctx.lineWidth = 1 * dpr;
+        for (let i = 0; i < pts.length; i++) {
+          const a = pts[i];
+          for (let j = i + 1; j < pts.length; j++) {
+            const b = pts[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const dist2 = dx*dx + dy*dy;
+            const max = (180 * dpr);
+            if (dist2 < max*max) {
+              const alpha = Math.max(0, 1 - Math.sqrt(dist2) / max) * 0.22;
+              ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // points
+        for (const p of pts) {
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // occasional "collision" flash near center
+        if (t % 240 === 0) {
+          const cx = w*0.5 + (Math.random()-0.5)*w*0.12;
+          const cy = h*0.45 + (Math.random()-0.5)*h*0.12;
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          for (let k = 0; k < 18; k++) {
+            const ang = (Math.PI * 2) * (k / 18) + (Math.random()-0.5)*0.12;
+            const len = (Math.random()*220 + 140) * dpr;
+            ctx.strokeStyle = `rgba(125,211,252,${0.12 + Math.random()*0.10})`;
+            ctx.lineWidth = (1.3 + Math.random()*1.2) * dpr;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(ang)*len, cy + Math.sin(ang)*len);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        requestAnimationFrame(draw);
+      }
+      requestAnimationFrame(draw);
     })();
   </script>
 </body>
