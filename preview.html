@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>heps.today · High Energy Physics, Today</title>
+  <meta name="description" content="heps.today — bilingual gateway to the High Energy Physics daily digest." />
+
+  <style>
+    :root{
+      --bg0:#070a12;
+      --bg1:#0b1020;
+      --fg:#e8edf5;
+      --muted:rgba(232,237,245,.72);
+      --glass:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --accent:#7dd3fc;   /* cyan */
+      --accent2:#a78bfa;  /* violet */
+      --ok:#86efac;       /* green */
+      --warn:#fbbf24;     /* amber */
+      --radius:18px;
+      --maxw: 980px;
+      --focus: 0 0 0 3px rgba(125,211,252,.25);
+    }
+
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg0:#f7f8fc;
+        --bg1:#ffffff;
+        --fg:#0b1020;
+        --muted:rgba(11,16,32,.68);
+        --glass:rgba(11,16,32,.05);
+        --border:rgba(11,16,32,.12);
+        --shadow: 0 18px 50px rgba(11,16,32,.15);
+        --focus: 0 0 0 3px rgba(11,16,32,.14);
+      }
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1100px 700px at 15% 10%, rgba(167,139,250,.20), transparent 55%),
+        radial-gradient(900px 600px at 90% 30%, rgba(125,211,252,.18), transparent 55%),
+        radial-gradient(1200px 900px at 50% 110%, rgba(125,211,252,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* Subtle detector-grid */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.22;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(circle at 50% 20%, rgba(0,0,0,1), rgba(0,0,0,0) 62%);
+    }
+    @media (prefers-color-scheme: light){
+      body::before{
+        opacity:.18;
+        background-image:
+          linear-gradient(to right, rgba(11,16,32,.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(11,16,32,.08) 1px, transparent 1px);
+      }
+    }
+
+    .skip{
+      position:absolute;
+      left:-999px;
+      top:auto;
+      width:1px;height:1px;
+      overflow:hidden;
+    }
+    .skip:focus{
+      left:16px; top:16px;
+      width:auto; height:auto;
+      padding:10px 12px;
+      border-radius:12px;
+      background:var(--bg1);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      z-index:9999;
+    }
+
+    .wrap{
+      max-width:var(--maxw);
+      margin:0 auto;
+      padding: clamp(22px, 4vw, 44px);
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      gap: 26px;
+      justify-content:center;
+    }
+
+    header.hero{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      align-items:flex-start;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 14px;
+      flex-wrap:wrap;
+    }
+
+    .mark{
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      position:relative;
+      box-shadow: 0 0 0 1px var(--border), var(--shadow);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(125,211,252,.18), transparent 52%),
+        conic-gradient(from 180deg, rgba(125,211,252,.0), rgba(125,211,252,.65), rgba(167,139,250,.55), rgba(125,211,252,.0));
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+    .mark::before{
+      /* collider ring */
+      content:"";
+      position:absolute;
+      inset:10px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.22);
+      box-shadow: inset 0 0 16px rgba(125,211,252,.18);
+    }
+    .mark::after{
+      /* “tracks” crossing */
+      content:"";
+      position:absolute;
+      inset:-12px;
+      background:
+        linear-gradient(115deg, transparent 46%, rgba(125,211,252,.75) 49%, transparent 52%),
+        linear-gradient(245deg, transparent 46%, rgba(167,139,250,.65) 49%, transparent 52%);
+      opacity:.65;
+      filter: blur(.2px);
+      transform: rotate(-10deg);
+    }
+    @media (prefers-reduced-motion: no-preference){
+      .mark{ animation: spin 10s linear infinite; }
+      @keyframes spin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+    }
+
+    .title{
+      font-size: clamp(38px, 5.2vw, 64px);
+      line-height:1.05;
+      letter-spacing: -0.02em;
+      margin:0;
+      font-weight: 780;
+      display:flex;
+      align-items:baseline;
+      gap:.02em;
+      text-shadow: 0 0 18px rgba(125,211,252,.10);
+    }
+    .title .hep{
+      color: var(--accent);
+      text-shadow:
+        0 0 20px rgba(125,211,252,.25),
+        0 0 44px rgba(125,211,252,.15);
+    }
+    .title .dot{ opacity:.9; }
+    .title .today{ opacity:.95; }
+
+    .subtitle{
+      margin:0;
+      max-width: 72ch;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .subtitle .sep{ opacity:.55; padding:0 .45em; }
+
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 720px){
+      .cards{ grid-template-columns: 1fr; }
+    }
+
+    a.card{
+      position:relative;
+      text-decoration:none;
+      color:inherit;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      overflow:hidden;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      outline:none;
+    }
+    a.card:hover{ transform: translateY(-2px); border-color: rgba(125,211,252,.35); }
+    a.card:focus-visible{ box-shadow: var(--shadow), var(--focus); border-color: rgba(125,211,252,.55); }
+
+    a.card::before{
+      /* “event display” spark */
+      content:"";
+      position:absolute;
+      inset:-1px;
+      background:
+        radial-gradient(520px 240px at 0% 0%, rgba(125,211,252,.18), transparent 55%),
+        radial-gradient(420px 220px at 100% 0%, rgba(167,139,250,.14), transparent 60%),
+        radial-gradient(260px 260px at 40% 110%, rgba(134,239,172,.10), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+
+    .card h2{
+      margin:0;
+      font-size: 20px;
+      line-height:1.2;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      z-index:1;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      color: rgba(255,255,255,.88);
+      font-size: 12px;
+      letter-spacing:.01em;
+      z-index:1;
+    }
+    @media (prefers-color-scheme: light){
+      .badge{
+        background: rgba(255,255,255,.55);
+        color: rgba(11,16,32,.86);
+        border-color: rgba(11,16,32,.18);
+      }
+    }
+
+    .card p{
+      margin:0;
+      color: var(--muted);
+      font-size: 14.5px;
+      line-height: 1.65;
+      z-index:1;
+      max-width: 60ch;
+    }
+
+    .cta{
+      margin-top:auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      z-index:1;
+      padding-top: 6px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.22);
+      font-weight: 650;
+      letter-spacing:.01em;
+      white-space:nowrap;
+    }
+    @media (prefers-color-scheme: light){
+      .btn{
+        background: rgba(255,255,255,.70);
+        border-color: rgba(11,16,32,.14);
+      }
+    }
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size: 12px;
+      padding: 2px 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      opacity:.92;
+    }
+    @media (prefers-color-scheme: light){
+      .kbd{
+        border-color: rgba(11,16,32,.18);
+        background: rgba(255,255,255,.55);
+      }
+    }
+
+    .recommended{
+      border-color: rgba(134,239,172,.55) !important;
+    }
+    .recommended .btn{
+      border-color: rgba(134,239,172,.35);
+    }
+
+    .note{
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--glass);
+      padding: 14px 16px;
+      color: var(--muted);
+      line-height:1.7;
+      font-size: 13.5px;
+      box-shadow: 0 10px 32px rgba(0,0,0,.18);
+    }
+    .note strong{ color: var(--fg); font-weight: 720; }
+
+    footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 14px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 12.5px;
+      padding-top: 6px;
+    }
+
+    @media print{
+      body{ background:#fff; color:#000; }
+      body::before{ display:none; }
+      .mark{ display:none; }
+      a.card{ box-shadow:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#main">跳到内容 / Skip to content</a>
+
+  <main id="main" class="wrap">
+    <header class="hero">
+      <div class="brand" aria-label="heps.today">
+        <div class="mark" aria-hidden="true"></div>
+        <h1 class="title">
+          <span class="hep">hep</span><span>s</span><span class="dot">.</span><span class="today">today</span>
+        </h1>
+      </div>
+
+      <p class="subtitle">
+        <span>面向 <strong>高能物理（HEP, High Energy Physics）</strong> 的每日论文摘要与浏览入口</span>
+        <span class="sep">•</span>
+        <span>A bilingual gateway to the daily High Energy Physics digest.</span>
+      </p>
+    </header>
+
+    <section class="cards" aria-label="Language selection / 语言选择">
+      <a class="card" id="card-en" href="https://en.heps.today/" rel="noopener" aria-label="Go to the English site">
+        <h2>
+          English
+          <span class="badge" id="badge-en" hidden>Recommended / 推荐</span>
+        </h2>
+        <p>
+          Read the daily digest in English. (Shortcut: <span class="kbd">E</span>)
+        </p>
+
+        <div class="cta">
+          <span class="btn">Enter EN →</span>
+          <span class="kbd">en</span>
+        </div>
+      </a>
+
+      <a class="card" id="card-cn" href="https://cn.heps.today/" rel="noopener" aria-label="进入中文站">
+        <h2>
+          中文
+          <span class="badge" id="badge-cn" hidden>推荐 / Recommended</span>
+        </h2>
+        <p>
+          用中文阅读每日摘要。（快捷键：<span class="kbd">C</span>）
+        </p>
+
+        <div class="cta">
+          <span class="btn">进入 CN →</span>
+          <span class="kbd">cn</span>
+        </div>
+      </a>
+    </section>
+
+    <section class="note" aria-label="Tips / 提示">
+      <div>
+        <strong>提示 / Tip：</strong>
+        如果你之后把两个 GitHub Pages 站点重定向到子域名（如 <code>en.heps.today</code> / <code>cn.heps.today</code>），这个导航页无需改动。
+        若你暂时还未配置子域名，可以把上面两个链接先替换为当前的 GitHub Pages 地址。
+      </div>
+      <noscript>
+        <div style="margin-top:10px;">
+          <strong>Note:</strong> JavaScript is disabled. The page still works—please click a language card to continue.
+        </div>
+      </noscript>
+    </section>
+
+    <footer>
+      <div>© <span id="year"></span> heps.today</div>
+      <div>
+        Keyboard: <span class="kbd">E</span> English · <span class="kbd">C</span> 中文
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var year = document.getElementById('year');
+      if (year) year.textContent = String(new Date().getFullYear());
+
+      // Recommend a language based on browser preference, but never auto-redirect.
+      var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+      var preferZh = lang.indexOf('zh') === 0;
+
+      var cardEn = document.getElementById('card-en');
+      var cardCn = document.getElementById('card-cn');
+      var badgeEn = document.getElementById('badge-en');
+      var badgeCn = document.getElementById('badge-cn');
+
+      if (preferZh) {
+        cardCn && cardCn.classList.add('recommended');
+        if (badgeCn) badgeCn.hidden = false;
+      } else {
+        cardEn && cardEn.classList.add('recommended');
+        if (badgeEn) badgeEn.hidden = false;
+      }
+
+      // Keyboard shortcuts: E / C
+      window.addEventListener('keydown', function (e) {
+        if (!e || !e.key) return;
+        var k = e.key.toLowerCase();
+        if (k === 'e' && cardEn) cardEn.click();
+        if (k === 'c' && cardCn) cardCn.click();
+      });
+    })();
+  </script>
+</body>
+</html>
