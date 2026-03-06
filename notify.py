@@ -121,7 +121,7 @@ def fetch_jsonl(url: str) -> List[Dict]:
     return data
 
 
-def call_llm(api_base: str, api_key: str, prompt: str, model: str = "qwen-plus-latest") -> str:
+def call_llm(api_base: str, api_key: str, prompt: str, model: str = "gpt-3.5-turbo") -> str:
     """Call an OpenAI‑compatible chat completion endpoint and return the response text.
 
     This function assumes the API follows the OpenAI Chat API format.
@@ -135,7 +135,7 @@ def call_llm(api_base: str, api_key: str, prompt: str, model: str = "qwen-plus-l
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are a professor in High Energy Physics and Mathematical Physics. And you are a helpful assistant that extracts topics and keywords."},
+            {"role": "system", "content": "You are a helpful assistant that extracts topics and keywords."},
             {"role": "user", "content": prompt},
         ],
         "max_tokens": 64,
@@ -266,9 +266,11 @@ def main() -> None:
     if not papers:
         print(f"No papers found for {date_str}.")
         return
+    print(f"Fetched {len(papers)} papers from data sources.")
     # Load subscribers
     subscribers_path = os.getenv("SUBSCRIBERS_FILE", "subscribers.json")
     subscribers = load_subscribers(subscribers_path)
+    print(f"Loaded {len(subscribers)} subscriber(s) from {subscribers_path}.")
     # LLM credentials
     api_key = os.getenv("OPENAI_API_KEY")
     api_base = os.getenv("OPENAI_BASE_URL")
@@ -284,18 +286,26 @@ def main() -> None:
         smtp_port = int(smtp_port_str)
     except ValueError:
         raise ValueError("SMTP_PORT must be an integer")
-    # Precompute keywords for each paper
+    # Precompute keywords for each paper with progress feedback
     paper_keywords: Dict[int, List[str]] = {}
+    total_papers = len(papers)
+    print(f"Processing {total_papers} papers for {date_str}...")
     for idx, paper in enumerate(papers):
         summary = paper.get("summary")
         if not summary:
             # Use AI tldr or abstract
             summary = paper.get("AI", {}).get("tldr") or paper.get("abs", "")
-        # Extract keywords via LLM
+        # Show progress for keyword extraction
+        print(f"  Extracting keywords for paper {idx + 1}/{total_papers}")
         kws = extract_keywords(summary, api_base, api_key) if summary else []
         paper_keywords[idx] = kws
+    print("Keyword extraction complete.")
+
     # For each subscriber, collect matching papers
-    for subscriber in subscribers:
+    total_subs = len(subscribers)
+    for sub_idx, subscriber in enumerate(subscribers):
+        recipient = subscriber.get("email") or "(unknown)"
+        print(f"Processing subscriber {sub_idx + 1}/{total_subs}: {recipient}")
         matches: List[Dict] = []
         for idx, paper in enumerate(papers):
             kws = paper_keywords.get(idx, [])
@@ -304,8 +314,7 @@ def main() -> None:
         # Compose and send email
         subject = f"HEPSToday Digest – {date_str}"
         body = compose_email(date_str, matches)
-        recipient = subscriber.get("email")
-        if not recipient:
+        if not subscriber.get("email"):
             print(f"Skipping subscriber with missing email: {subscriber}")
             continue
         try:
@@ -315,13 +324,14 @@ def main() -> None:
                 smtp_user=smtp_user,
                 smtp_password=smtp_password,
                 sender=sender_email,
-                recipient=recipient,
+                recipient=subscriber["email"],
                 subject=subject,
                 body=body,
             )
-            print(f"Sent digest to {recipient}, {len(matches)} matches")
+            print(f"  Sent digest to {subscriber['email']}, {len(matches)} matches")
         except Exception as e:
-            print(f"Failed to send email to {recipient}: {e}")
+            print(f"  Failed to send email to {subscriber['email']}: {e}")
+    print("Processing complete.")
 
 
 if __name__ == "__main__":
