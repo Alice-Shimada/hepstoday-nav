@@ -34,7 +34,7 @@ jobs:
           SMTP_PASSWORD:  ${{ secrets.SMTP_PASSWORD }}
           SENDER_EMAIL:  ${{ secrets.SENDER_EMAIL }}
           # If your subscribers file is stored in the repository, point to it here
-          SUBSCRIBERS_FILE: hepstoday_notifier/subscribers.json
+          SUBSCRIBERS_FILE: subscribers.json
           TIMEZONE: Europe/Berlin
         run: |
-          python hepstoday_notifier/notify.py
+          python notify.py
