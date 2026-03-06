@@ -1,7 +1,12 @@
 [
   {
     "email": "liuyuanche@mail.ustc.edu.cn",
-    "keywords": ["Feynman Integrals", "supersymmetry", "string theory"],
-    "authors": ["Yang Zhang", "Rourou Ma", "Yu Wu"]
+    "keywords": ["Feynman Integrals", "conformal field theory", "conformal integrals", "amplitude"],
+    "authors": ["Yang Zhang", "Rourou Ma", "Yu Wu", "Yuanche Liu", "Yongqun Xu", "Zihao Wu"]
+  },
+  {
+    "email": "wuzihao@mail.ustc.edu.cn",
+    "keywords": ["Feynman Integrals", "conformal field theory", "conformal integrals", "amplitude"],
+    "authors": ["Yang Zhang", "Rourou Ma", "Yu Wu", "Yuanche Liu", "Yongqun Xu", "Zihao Wu"]
   }
 ]
