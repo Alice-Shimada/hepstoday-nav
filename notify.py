@@ -121,7 +121,7 @@ def fetch_jsonl(url: str) -> List[Dict]:
     return data
 
 
-def call_llm(api_base: str, api_key: str, prompt: str, model: str = "gpt-3.5-turbo") -> str:
+def call_llm(api_base: str, api_key: str, prompt: str, model: str = "qwen-plus-latest") -> str:
     """Call an OpenAI‑compatible chat completion endpoint and return the response text.
 
     This function assumes the API follows the OpenAI Chat API format.
@@ -135,7 +135,7 @@ def call_llm(api_base: str, api_key: str, prompt: str, model: str = "gpt-3.5-tur
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are a helpful assistant that extracts topics and keywords."},
+            {"role": "system", "content": "You are a professor in High Energy Physics, and also a helpful assistant that extracts passage topics and keywords."},
             {"role": "user", "content": prompt},
         ],
         "max_tokens": 64,
@@ -251,14 +251,12 @@ def send_email(smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: st
 
 def main() -> None:
     date_str = get_target_date()
-    # Build URLs for English and Chinese AI‑enhanced data
+    # Build URLs for English AI‑enhanced data
     base_en = "https://raw.githubusercontent.com/Alice-Shimada/hepstoday-en/data/data"
-    base_cn = "https://raw.githubusercontent.com/Alice-Shimada/hepstoday-cn/data/data"
     en_url = f"{base_en}/{date_str}_AI_enhanced_English.jsonl"
-    cn_url = f"{base_cn}/{date_str}_AI_enhanced_Chinese.jsonl"
-    # Fetch papers for both languages
+    # Fetch papers for only English
     papers: List[Dict] = []
-    for url in [en_url, cn_url]:
+    for url in [en_url]:
         try:
             papers += fetch_jsonl(url)
         except Exception as e:
