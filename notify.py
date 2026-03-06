@@ -127,7 +127,7 @@ def call_llm(api_base: str, api_key: str, prompt: str, model: str = "qwen-plus-l
     This function assumes the API follows the OpenAI Chat API format.
     Raises HTTPError if the response indicates failure.
     """
-    url = api_base.rstrip("/") + "/v1/chat/completions"
+    url = api_base.rstrip("/") + "/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
