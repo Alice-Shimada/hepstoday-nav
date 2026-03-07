@@ -154,11 +154,11 @@ def render_paper_card(paper: Dict) -> bytes:
     if authors:
         author_text = f"Authors: {', '.join(authors)}"
         # Wrap the author line; mark the entire line bold to emphasize the label
-        for wrapped in textwrap.wrap(author_text, width=80):
+        for wrapped in textwrap.wrap(author_text, width=120):
             lines_data.append((wrapped, True))
     if categories:
         category_text = f"Categories: {', '.join(categories)}"
-        for wrapped in textwrap.wrap(category_text, width=80):
+        for wrapped in textwrap.wrap(category_text, width=120):
             lines_data.append((wrapped, True))
     # Add spacing between metadata and summary when any metadata exists
     if (authors or categories) and summary:
@@ -167,7 +167,7 @@ def render_paper_card(paper: Dict) -> bytes:
         # Add a bold "Abstract:" line before the summary
         lines_data.append(("Abstract:", True))
         # Wrap the summary and mark as normal weight
-        for wrapped in textwrap.wrap(summary, width=80):
+        for wrapped in textwrap.wrap(summary, width=120):
             lines_data.append((wrapped, False))
 
     # Remove any trailing empty lines
@@ -177,8 +177,8 @@ def render_paper_card(paper: Dict) -> bytes:
     # Compute number of display lines accounting for wrapped lines
     n_lines = len(lines_data) or 1
     # Determine figure size: roughly 0.35 inch per line with a minimum height
-    height = max(2, 0.35 * n_lines)
-    width = 6
+    height = max(2, 0.3 * n_lines)
+    width = 9
 
     # Create the figure
     fig = plt.figure(figsize=(width, height))
@@ -212,7 +212,7 @@ def render_paper_card(paper: Dict) -> bytes:
     buf.seek(0)
     img = Image.open(buf)
     width_px, height_px = img.size
-    crop_height = int(height_px * 0.8)  # keep top 80%
+    crop_height = int(height_px * 0.95)  # keep top 80%
     cropped = img.crop((0, 0, width_px, crop_height))
     out_buf = io.BytesIO()
     cropped.save(out_buf, format='PNG')
