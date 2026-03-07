@@ -35,7 +35,8 @@ jobs:
           SENDER_EMAIL:  ${{ secrets.SENDER_EMAIL }}
           # If your subscribers file is stored in the repository, point to it here
           SUBSCRIBERS_FILE: subscribers.json
-          TARGET_DATE: "2026-03-06"
+          # If one needs to debug, uncomment this:
+          # TARGET_DATE: "2026-03-06"
           TIMEZONE: Europe/Berlin
         run: |
           python notify_with_cards.py
