@@ -208,11 +208,11 @@ def render_paper_card(paper: Dict) -> bytes:
     fig.savefig(buf, format='png', bbox_inches='tight', dpi=150)
     plt.close(fig)
 
-    # Crop the bottom 40% of the rendered card to reduce whitespace
+    # Crop the bottom 20% of the rendered card to reduce whitespace
     buf.seek(0)
     img = Image.open(buf)
     width_px, height_px = img.size
-    crop_height = int(height_px * 0.6)  # keep top 60%
+    crop_height = int(height_px * 0.8)  # keep top 80%
     cropped = img.crop((0, 0, width_px, crop_height))
     out_buf = io.BytesIO()
     cropped.save(out_buf, format='PNG')
@@ -256,7 +256,7 @@ def compose_email_html(date: str, matches: List[Dict]) -> Tuple[str, List[Tuple[
                 continue
             cid = f"card{len(attachments)}"
             attachments.append((cid, img_data))
-            parts.append(f"<p><img src=\"cid:{cid}\" alt=\"Paper {idx}\" style=\"max-width:100%; height:auto;\"></p>")
+            parts.append(f"<p><img src=\"cid:{cid}\" alt=\"Paper {idx}\" style=\"max-width:75%; height:auto;\"></p>")
     html_body = "\n".join(parts)
     return html_body, attachments
 
