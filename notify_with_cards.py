@@ -13,7 +13,6 @@ to format the content.  Each card is rendered on a separate figure
 with dynamic height based on the amount of text.  The script
 otherwise follows the original logic: fetch data, extract keywords,
 match to subscribers, and send individualized emails.
-
 """
 
 import json
@@ -30,7 +29,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from matplotlib import pyplot as plt
-
+from PIL import Image  # Used for cropping rendered cards
 
 def get_target_date() -> str:
     """Return the date to process in YYYY‑MM‑DD format."""
@@ -44,7 +43,6 @@ def get_target_date() -> str:
         except ValueError:
             raise ValueError(f"TARGET_DATE must be YYYY‑MM‑DD, got {target}")
     return datetime.datetime.now(tz).strftime("%Y-%m-%d")
-
 
 def fetch_jsonl(url: str) -> List[Dict]:
     """Fetch a JSONL file from a URL and return list of JSON objects."""
@@ -61,7 +59,6 @@ def fetch_jsonl(url: str) -> List[Dict]:
         except json.JSONDecodeError as e:
             print(f"Skipping malformed JSON line: {e}")
     return data
-
 
 def call_llm(api_base: str, api_key: str, prompt: str, model: str = "qwen-plus-latest") -> str:
     """Call an OpenAI‑compatible chat completion endpoint and return the response text."""
@@ -88,7 +85,6 @@ def call_llm(api_base: str, api_key: str, prompt: str, model: str = "qwen-plus-l
     except (KeyError, IndexError) as e:
         raise RuntimeError(f"Unexpected response format: {data}") from e
 
-
 def extract_keywords(summary: str, api_base: str, api_key: str) -> List[str]:
     """Use LLM to extract a list of keywords from the provided summary."""
     prompt = (
@@ -105,7 +101,6 @@ def extract_keywords(summary: str, api_base: str, api_key: str) -> List[str]:
     keywords = [kw.strip().lower() for kw in response.split(",") if kw.strip()]
     return keywords
 
-
 def load_subscribers(path: str) -> List[Dict]:
     """Load subscriber definitions from a JSON file."""
     with open(path, "r", encoding="utf-8") as f:
@@ -113,7 +108,6 @@ def load_subscribers(path: str) -> List[Dict]:
     if not isinstance(data, list):
         raise ValueError("Subscribers file must contain a list of objects")
     return data
-
 
 def match_paper_to_subscriber(paper: Dict, keywords: List[str], subscriber: Dict) -> bool:
     """Determine whether a paper matches the subscriber’s interests."""
@@ -134,55 +128,95 @@ def match_paper_to_subscriber(paper: Dict, keywords: List[str], subscriber: Dict
                 return True
     return False
 
-
 def render_paper_card(paper: Dict) -> bytes:
-    """Render a paper summary as a PNG image.
+    """Render a paper summary as a PNG image with improved formatting.
 
-    The card contains the title (bold, larger font), authors, categories
-    and the summary text.  Inline formulas delimited by $...$ are
-    rendered using matplotlib’s mathtext engine.  The figure size is
-    computed based on the number of lines after wrapping the summary.
+    The card contains the title (bold, larger font), a bold label for
+    authors and categories, an "Abstract:" label before the summary,
+    and the summary text itself.  Each piece of text is drawn on a
+    separate line to allow selective bolding.  After rendering, the
+    bottom 40% of the card image is cropped to reduce whitespace and
+    improve visual balance.
     """
-    title = paper.get("title", "")
+    # Extract fields from the paper dictionary
+    title: str = paper.get("title", "")
     authors = paper.get("authors") or []
-    author_line = f"Authors: {', '.join(authors)}" if authors else ""
     categories = paper.get("categories") or []
-    category_line = f"Categories: {', '.join(categories)}" if categories else ""
     summary = paper.get("summary") or paper.get("AI", {}).get("tldr") or ""
-    # Wrap the summary for a reasonable line length
-    wrapped_summary = textwrap.fill(summary, width=80)
-    # Assemble lines; empty strings are filtered out later
-    lines: List[str] = []
+
+    # Prepare text lines with bold flags.  We wrap long text to 80 characters.
+    lines_data: List[Tuple[str, bool]] = []  # (text, bold)
     if title:
-        lines.append(title)
-        lines.append("")
-    if author_line:
-        lines.append(author_line)
-    if category_line:
-        lines.append(category_line)
-    if author_line or category_line:
-        lines.append("")
-    if wrapped_summary:
-        lines.append(wrapped_summary)
-    # Remove trailing empty lines
-    while lines and lines[-1] == "":
-        lines.pop()
-    # Determine figure size: 0.35 inch per line, min 2 inches height
-    n_lines = sum(len(l.split("\n")) for l in lines)
+        # Title gets its own line and is bold
+        lines_data.append((title, True))
+        # Add a blank line after the title for spacing
+        lines_data.append(("", False))
+    if authors:
+        author_text = f"Authors: {', '.join(authors)}"
+        # Wrap the author line; mark the entire line bold to emphasize the label
+        for wrapped in textwrap.wrap(author_text, width=80):
+            lines_data.append((wrapped, True))
+    if categories:
+        category_text = f"Categories: {', '.join(categories)}"
+        for wrapped in textwrap.wrap(category_text, width=80):
+            lines_data.append((wrapped, True))
+    # Add spacing between metadata and summary when any metadata exists
+    if (authors or categories) and summary:
+        lines_data.append(("", False))
+    if summary:
+        # Add a bold "Abstract:" line before the summary
+        lines_data.append(("Abstract:", True))
+        # Wrap the summary and mark as normal weight
+        for wrapped in textwrap.wrap(summary, width=80):
+            lines_data.append((wrapped, False))
+
+    # Remove any trailing empty lines
+    while lines_data and lines_data[-1][0] == "":
+        lines_data.pop()
+
+    # Compute number of display lines accounting for wrapped lines
+    n_lines = len(lines_data) or 1
+    # Determine figure size: roughly 0.35 inch per line with a minimum height
     height = max(2, 0.35 * n_lines)
-    width = 6  # inches
+    width = 6
+
+    # Create the figure
     fig = plt.figure(figsize=(width, height))
     ax = fig.add_axes([0, 0, 1, 1])
     ax.axis('off')
-    # Draw text with math rendering; join lines with newline
-    text = "\n".join(lines)
-    ax.text(0.01, 0.99, text, va='top', ha='left', fontsize=10, wrap=True)
-    # Save to buffer
+
+    # Vertical positioning: start near top and step downward for each line
+    # Reserve a small margin at the top; use data coordinates (0 to 1)
+    y_start = 0.98
+    # Compute a uniform step; avoid dividing by zero
+    y_step = 0.0 if n_lines == 0 else (y_start - 0.02) / max(n_lines, 1)
+    y = y_start
+    for text_line, bold_flag in lines_data:
+        # Split by explicit newlines (shouldn't occur but safe)
+        sub_lines = text_line.split("\n") if text_line else [""]
+        for sub_line in sub_lines:
+            # Determine font weight
+            weight = 'bold' if bold_flag else 'normal'
+            # Increase font size slightly for the title line
+            fontsize = 12 if bold_flag and sub_line == title else 10
+            ax.text(0.01, y, sub_line, va='top', ha='left', fontsize=fontsize,
+                    fontweight=weight, wrap=True)
+            y -= y_step
+
+    # Render the figure into a PNG buffer
     buf = io.BytesIO()
     fig.savefig(buf, format='png', bbox_inches='tight', dpi=150)
     plt.close(fig)
-    return buf.getvalue()
 
+    # Crop the bottom 40% of the rendered card to reduce whitespace
+    buf.seek(0)
+    img = Image.open(buf)
+    width_px, height_px = img.size
+    crop_height = int(height_px * 0.6)  # keep top 60%
+    cropped = img.crop((0, 0, width_px, crop_height))
+    out_buf = io.BytesIO()
+    cropped.save(out_buf, format='PNG')
+    return out_buf.getvalue()
 
 def compose_email_plain(date: str, matches: List[Dict]) -> str:
     """Compose the plain text body of the email."""
@@ -207,7 +241,6 @@ def compose_email_plain(date: str, matches: List[Dict]) -> str:
             lines.append("")
     return "\n".join(lines)
 
-
 def compose_email_html(date: str, matches: List[Dict]) -> Tuple[str, List[Tuple[str, bytes]]]:
     """Compose the HTML body and list of image attachments for the email."""
     attachments: List[Tuple[str, bytes]] = []
@@ -226,7 +259,6 @@ def compose_email_html(date: str, matches: List[Dict]) -> Tuple[str, List[Tuple[
             parts.append(f"<p><img src=\"cid:{cid}\" alt=\"Paper {idx}\" style=\"max-width:100%; height:auto;\"></p>")
     html_body = "\n".join(parts)
     return html_body, attachments
-
 
 def send_email(
     smtp_host: str,
@@ -262,9 +294,9 @@ def send_email(
             server.login(smtp_user, smtp_password)
         server.sendmail(sender, [recipient], msg.as_string())
 
-
 def main() -> None:
     date_str = get_target_date()
+    # The dataset path uses a fixed remote repository; adjust as needed
     base_en = "https://raw.githubusercontent.com/Alice-Shimada/hepstoday-en/data/data"
     en_url = f"{base_en}/{date_str}_AI_enhanced_English.jsonl"
     papers: List[Dict] = []
@@ -293,6 +325,7 @@ def main() -> None:
         smtp_port = int(smtp_port_str)
     except ValueError:
         raise ValueError("SMTP_PORT must be an integer")
+    # Precompute keywords for all papers
     paper_keywords: Dict[int, List[str]] = {}
     total_papers = len(papers)
     print(f"Processing {total_papers} papers for {date_str}...")
@@ -317,26 +350,20 @@ def main() -> None:
         plain_body = compose_email_plain(date_str, matches)
         html_body, attachments = compose_email_html(date_str, matches)
         if not subscriber.get("email"):
-            print(f"Skipping subscriber with missing email: {subscriber}")
+            print("Skipping subscriber without email address.")
             continue
-        try:
-            send_email(
-                smtp_host=smtp_host,
-                smtp_port=smtp_port,
-                smtp_user=smtp_user,
-                smtp_password=smtp_password,
-                sender=sender_email,
-                recipient=subscriber["email"],
-                subject=subject,
-                body_text=plain_body,
-                body_html=html_body,
-                attachments=attachments,
-            )
-            print(f"  Sent digest to {subscriber['email']}, {len(matches)} matches")
-        except Exception as e:
-            print(f"  Failed to send email to {subscriber['email']}: {e}")
-    print("Processing complete.")
-
+        send_email(
+            smtp_host,
+            smtp_port,
+            smtp_user,
+            smtp_password,
+            sender_email,
+            subscriber.get("email"),
+            subject,
+            plain_body,
+            html_body,
+            attachments,
+        )
 
 if __name__ == "__main__":
     main()
